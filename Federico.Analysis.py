@@ -62,14 +62,6 @@ def compare_sentiment_returns(df_sentiment, df_yahoo, shift_value):
     return merged_df
 
 
-def normalize_dataset(merged_dataset):
-    x = merged_dataset.values
-    min_max_scaler = preprocessing.MinMaxScaler()
-    x_scaled = min_max_scaler.fit_transform(x)
-    normalized_dataset = pd.DataFrame(x_scaled)
-    return normalized_dataset
-
-
 if __name__ == "__main__":
     input_datafile_csv = "data1_cleaned.csv"
     df_grabbed_sentiment = pd.read_csv(input_datafile_csv)
