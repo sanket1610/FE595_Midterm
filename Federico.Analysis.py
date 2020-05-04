@@ -1,4 +1,15 @@
 import nltk
+import numpy as np
+from sklearn.linear_model import LogisticRegression
+from sklearn.neighbors import KNeighborsClassifier
+# from sklearn.metrics import accuracy_score
+from sklearn import svm
+from sklearn.naive_bayes import GaussianNB, BernoulliNB
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import train_test_split
+
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.3, random_state=0)
 
 nltk.download("vader_lexicon")
 import pandas as pd
@@ -17,41 +28,27 @@ def update_sentiment_value(input_df_sentiment):
         )
         input_df_sentiment.at[i, "Score"] = curr_score
         input_df_sentiment.at[i, "Dates"] = datetime.datetime.strptime(
-            str(row["Dates"]), "%m/%d/%Y"
+            str(row["Dates"]), "%Y-%m-%d"
         ).date()
     return input_df_sentiment
-
-
-def get_mean_score_by_date(input_df_sentiment):
-    df_sentiment_mean_by_day = input_df_sentiment.groupby(["Dates"]).mean()
-    return df_sentiment_mean_by_day
-
-
-def load_TSLA_Yahoo_Data(input_data_file):
-    df_TSLA_data = pd.read_csv(input_data_file)
-    df_TSLA_data["Date"] = df_TSLA_data["Date"].astype("datetime64[ns]")
-    df_TSLA_data.set_index("Date", inplace=True)
-    df_TSLA_data["Returns"] = (
-        df_TSLA_data["Adj Close"] / df_TSLA_data["Adj Close"].shift(1) - 1
-    )
-    return df_TSLA_data
 
 
 def load_TSLA_by_yfinance_Data(ticker_name):
     yfinance_reader.pdr_override()
     TSLA_Yahoo_data = pdr.get_data_yahoo(
-        ticker_name, start="2018-11-15", end="2020-04-09"
+        ticker_name, start="2018-02-13", end="2020-04-27"
     )
-    TSLA_Yahoo_data["Returns"] = (
-        TSLA_Yahoo_data["Adj Close"] / TSLA_Yahoo_data["Adj Close"].shift(1) - 1
-    )
+    TSLA_Yahoo_data["Returns"] = TSLA_Yahoo_data["Adj Close"] / (TSLA_Yahoo_data["Adj Close"].shift(1) - 1)
     return TSLA_Yahoo_data
 
 
-def compare_sentiment_returns(df_sentiment, df_yahoo, shift_value):
-    print(df_sentiment["Score"].head)
-    df_sentiment["Score"] = df_sentiment.shift(shift_value)
-    print(df_sentiment["Score"].head)
+def get_mean_score_by_date(input_df_sentiment):
+    df_sentiment_mean_by_day = input_df_sentiment.groupby(["Dates"]).mean()
+    df_sentiment_mean_by_day['Score'] = df_sentiment_mean_by_day['Score'].shift(1)
+    return df_sentiment_mean_by_day
+
+
+def compare_sentiment_returns(df_sentiment, df_yahoo):
     merged_df = pd.merge(
         df_yahoo[["Returns"]],
         df_sentiment[["Score"]],
@@ -62,18 +59,70 @@ def compare_sentiment_returns(df_sentiment, df_yahoo, shift_value):
     return merged_df
 
 
+def preprocessings(df):
+    x = df[['Score']].values
+    y = df[['Returns']].values
+
+    x = preprocessing.scale(x)
+    y = preprocessing.scale(y)
+    values = []
+    for val in y:
+        if str(val).startswith("[-"):
+            values.append(0)
+        else:
+            values.append(1)
+
+    df['Ret'] = values
+    df.drop('Returns', axis=1, inplace=True)
+    x = x = df[['Score']].values
+    y = df[['Ret']].values
+    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.3, random_state=0)
+    return x_train, x_test, y_train, y_test
+
+
+def knc(x_train, x_test, y_train, y_test):
+    model1 = KNeighborsClassifier(algorithm='ball_tree')
+    model1.fit(x_train, y_train)
+    predictions = model1.predict(x_test)
+    print("knn score ", accuracy_score(y_test, predictions) * 100)
+
+
+def logisticreg(x_train, x_test, y_train, y_test):
+    model2 = LogisticRegression(solver='newton-cg', multi_class='ovr', max_iter=200, penalty='l2')
+    model2.fit(x_train, y_train)
+    predictions = model2.predict(x_test)
+    print("LogRegression ", accuracy_score(y_test, predictions) * 100)
+
+
+def support(x_train, x_test, y_train, y_test):
+    model3 = svm.SVC(kernel='sigmoid')
+    model3.fit(x_train, y_train)
+    predictions = model3.predict(x_test)
+    print("SVM ", accuracy_score(y_test, predictions) * 100)
+
+
+def naive(x_train, x_test, y_train, y_test):
+    model_guass = GaussianNB()
+    model4 = BernoulliNB()
+    model_guass.fit(x_train, y_train)
+    model4.fit(x_train, y_train)
+    predictions_gauss = model_guass.predict(x_test)
+    predictions = model4.predict(x_test)
+    print("naive bayes using gaussian ", accuracy_score(y_test, predictions_gauss) * 100)
+    print("naive bayes using Bernoulli ", accuracy_score(y_test, predictions) * 100)
+
+
 if __name__ == "__main__":
-    input_datafile_csv = "data1_cleaned.csv"
+    input_datafile_csv = "TSLA_1.csv"
     df_grabbed_sentiment = pd.read_csv(input_datafile_csv)
     df_grabbed_sentiment = update_sentiment_value(df_grabbed_sentiment)
     TSLA_Yahoo_data = load_TSLA_by_yfinance_Data("TSLA")
     df_mean_score = get_mean_score_by_date(df_grabbed_sentiment)
-    df_mean_score.to_csv("df_mean_score")
     TSLA_Yahoo_data.to_csv("TSLA_Yahoo_data")
-    for shift_value in range(1, 5):
-        merged_df = compare_sentiment_returns(
-            df_mean_score, TSLA_Yahoo_data, shift_value
-        )
-        merged_df = merged_df.fillna(merged_df.mean())
-        merged_df.plot(x="Score", y="Returns", style="o")
-        print(merged_df["Returns"].corr(merged_df["Score"]))
+    merged_df = compare_sentiment_returns(df_mean_score, TSLA_Yahoo_data)
+    merged_df = merged_df.fillna(merged_df.mean())
+    a, b, c, d = preprocessings(merged_df)
+    kneigh = knc(a, b, c, d)
+    logistic = logisticreg(a, b, c, d)
+    support = support(a, b, c, d)
+    naivebayse = naive(a, b, c, d)
