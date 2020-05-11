@@ -8,4 +8,4 @@ For our “Midterm Project” first we webscraped data regarding Tesla from “S
 
 Moreover, we performed the sentiment analysis on the data we webscraped from “Seeking Alpha” and then we also downloaded data regarding Tesla from “Yahoo Finance”.
 
-Furthermore, we studied the correlation between the data obtained from the sentiment analysis and the data regarding Tesla taken from “Yahoo Finance”.
+Furthermore, we studied different aspects regarding the data obtained from the sentiment analysis and the data regarding Tesla taken from “Yahoo Finance”.
