@@ -10,4 +10,4 @@ Furthermore, we studied different aspects regarding the data obtained from the s
 
 With the sentimental data and TSLA returns, we created various machine learning models and calculated their accuracy.
 
-We developed the flask app to run sentiment analysis and displat the output on the html file. 
+We developed the flask app to run sentiment analysis and display the output on the html file. 
