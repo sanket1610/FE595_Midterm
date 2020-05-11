@@ -1,6 +1,9 @@
+FE 595
 
-FE595_Midterm
+Midterm Project
 
-webscraping.py: script to pull article headlines and published dates from Seeking Alpha stock analysis page. Example output for TSLA saved to file TSLA_1.csv, which was used for model training
+Group 1
 
-Federico.Analysis.py: the code contained in this file performs different tasks. To this regard, the data regarding Tesla is downloaded from “Yahoo Finance” and also the sentiment analysis is carried out. Moreover, the correlation between the data taken from “Yahoo Finance” and the data obtained by carrying out the sentiment analysis is also studied by using the code contained in the file in question.
+For our “Midterm Project” first we webscraped data regarding Tesla from “Seeking Alpha”; the code that was used to webscrape the data from “Seeking Alpha” can be found in the file named “webscraping.py”.
+Moreover, we performed the sentiment analysis on the data we webscraped from “Seeking Alpha” and then we also downloaded data regarding Tesla from “Yahoo Finance”.
+Furthermore, we studied the correlation between the data obtained from the sentiment analysis and the data regarding Tesla taken from “Yahoo Finance”.
